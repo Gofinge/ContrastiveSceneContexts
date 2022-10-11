@@ -73,7 +73,7 @@ def compute_full_overlapping(input_path, voxel_size=0.05):
             for j, (pcd1_name, pcd1) in enumerate(points):
                 if i < j:
                     overlap = max(matching_matrix[i, j], matching_matrix[j, i])
-                    f.write("{} {} {}\n".format(pcd0_name, pcd1_name, overlap))
+                    f.write("{} {} {}\n".format(os.path.basename(pcd0_name), os.path.basename(pcd1_name), overlap))
 
     print('done.')
 

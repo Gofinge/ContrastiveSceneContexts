@@ -26,9 +26,9 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_root', required=True, help='Path to the ScanNet dataset containing scene folders')
     parser.add_argument('--output_root', required=True, help='Output path where train/val folders will be located')
     opt = parser.parse_args()
-    sens_list = glob.glob(os.path.join(opt.dataset_root, "scans/scene*/*.sens"))
+    sens_list = sorted(glob.glob(os.path.join(opt.dataset_root, "scans/scene*/*.sens")))
     # Preprocess data.
-    # pool = ProcessPoolExecutor(max_workers=mp.cpu_count())
-    pool = ProcessPoolExecutor(max_workers=1)
+    pool = ProcessPoolExecutor(max_workers=mp.cpu_count())
+    # pool = ProcessPoolExecutor(max_workers=1)
     print('Processing scenes...')
     _ = list(pool.map(parse_sens, sens_list, repeat(opt.output_root)))

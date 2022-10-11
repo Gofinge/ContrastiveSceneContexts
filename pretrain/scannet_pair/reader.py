@@ -26,7 +26,3 @@ def reader(filename,
         sd.export_poses(os.path.join(output_path, 'pose'), frame_skip=frame_skip)
     if export_intrinsics:
         sd.export_intrinsics(os.path.join(output_path, 'intrinsic'))
-
-
-if __name__ == '__main__':
-    main()
