@@ -2,6 +2,8 @@ import os
 import argparse
 import glob
 import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor
+from itertools import repeat
 from reader import reader
 from point_cloud_extractor import extractor
 from compute_full_overlapping import compute_full_overlapping
@@ -23,9 +25,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_root', required=True, help='Path to the ScanNet dataset containing scene folders')
     parser.add_argument('--output_root', required=True, help='Output path where train/val folders will be located')
-    config = parser.parse_args()
-    sens_list = glob.glob(os.path.join(config.dataset_root, "scans/scene*/*.sens"))
-    pool = mp.Pool(processes=mp.cpu_count())
-    pool.starmap(parse_sens, [(sens) for sens in sens_list])
-    pool.close()
-    pool.join()
+    opt = parser.parse_args()
+    sens_list = glob.glob(os.path.join(opt.dataset_root, "scans/scene*/*.sens"))
+    # Preprocess data.
+    pool = ProcessPoolExecutor(max_workers=mp.cpu_count())
+    # pool = ProcessPoolExecutor(max_workers=1)
+    print('Processing scenes...')
+    _ = list(pool.map(parse_sens, sens_list, repeat(opt.output_root)))
