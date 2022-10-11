@@ -16,7 +16,7 @@ def parse_sens(sens_dir, output_dir):
     scene = os.path.basename(os.path.dirname(sens_dir))
     print(f"Parsing sens data{sens_dir}")
     reader(sens_dir, os.path.join(output_dir, scene), frame_skip,
-           export_depth_images=True, export_poses=True, export_intrinsics=True)
+           export_color_images=True, export_depth_images=True, export_poses=True, export_intrinsics=True)
     extractor(os.path.join(output_dir, scene), os.path.join(output_dir, scene, "pcd"))
     compute_full_overlapping(os.path.join(output_dir, scene, "pcd"))
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     opt = parser.parse_args()
     sens_list = glob.glob(os.path.join(opt.dataset_root, "scans/scene*/*.sens"))
     # Preprocess data.
-    pool = ProcessPoolExecutor(max_workers=mp.cpu_count())
-    # pool = ProcessPoolExecutor(max_workers=1)
+    # pool = ProcessPoolExecutor(max_workers=mp.cpu_count())
+    pool = ProcessPoolExecutor(max_workers=1)
     print('Processing scenes...')
     _ = list(pool.map(parse_sens, sens_list, repeat(opt.output_root)))
