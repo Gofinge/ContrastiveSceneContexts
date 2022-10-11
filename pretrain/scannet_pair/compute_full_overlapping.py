@@ -46,40 +46,35 @@ def get_matching_indices(source, pcd_tree, search_voxel_size, K=None):
             match_inds.append((i, j))
     return match_inds
 
-# params
-parser = argparse.ArgumentParser()
-# data paths
-parser.add_argument('--input_path', required=True, help='path to sens file to read')
-parser.add_argument('--voxel_size', type=float, default=0.05)
-opt = parser.parse_args()
-print(opt)
 
-print('load point clouds and downsampling...')
+def compute_full_overlapping(input_path, voxel_size=0.05):
+    _points = [
+        (pcd_name, make_open3d_point_cloud(np.load(pcd_name)['pcd'], voxel_size=voxel_size))
+        for pcd_name in glob.glob(os.path.join(input_path, "*.npz"))
+    ]
+    points = [(pcd_name, pcd) for (pcd_name, pcd) in _points if pcd is not None]
+    print('load {} point clouds ({} invalid has been filtered), computing matching/overlapping'.format(
+        len(points), len(_points) - len(points)))
 
-_points = [
-    (pcd_name, make_open3d_point_cloud(np.load(pcd_name)['pcd'], voxel_size=opt.voxel_size))
-        for pcd_name in glob.glob(os.path.join(opt.input_path, "*.npz"))
-]
-points = [(pcd_name, pcd) for (pcd_name, pcd) in _points if pcd is not None]
-print('load {} point clouds ({} invalid has been filtered), computing matching/overlapping'.format(
-    len(points), len(_points) - len(points)))
-
-matching_matrix = np.zeros((len(points), len(points)))
-for i, (pcd0_name, pcd0) in enumerate(points):
-    print('matching to...{}'.format(pcd0_name))
-    pcd0_tree = o3d.geometry.KDTreeFlann(copy.deepcopy(pcd0))
-    for j, (pcd1_name, pcd1) in enumerate(points):
-        if i == j:
-            continue
-        matching_matrix[i, j] = float(len(get_matching_indices(pcd1, pcd0_tree, 1.5 * opt.voxel_size, 1))) / float(len(pcd1.points))
-
-# write to file
-print('writing to file')
-with open(os.path.join(opt.input_path, "overlap.txt"), 'w') as f:
+    matching_matrix = np.zeros((len(points), len(points)))
     for i, (pcd0_name, pcd0) in enumerate(points):
+        print('matching to...{}'.format(pcd0_name))
+        pcd0_tree = o3d.geometry.KDTreeFlann(copy.deepcopy(pcd0))
         for j, (pcd1_name, pcd1) in enumerate(points):
-            if i < j:
-                overlap = max(matching_matrix[i, j], matching_matrix[j, i])
-                f.write("{} {} {}\n".format(pcd0_name, pcd1_name, overlap))
+            if i == j:
+                continue
+            matching_matrix[i, j] = float(len(get_matching_indices(pcd1, pcd0_tree, 1.5 * voxel_size, 1))) / float(
+                len(pcd1.points))
 
-print('done.')
+    # write to file
+    print('writing to file')
+    with open(os.path.join(input_path, "overlap.txt"), 'w') as f:
+        for i, (pcd0_name, pcd0) in enumerate(points):
+            for j, (pcd1_name, pcd1) in enumerate(points):
+                if i < j:
+                    overlap = max(matching_matrix[i, j], matching_matrix[j, i])
+                    f.write("{} {} {}\n".format(pcd0_name, pcd1_name, overlap))
+
+    print('done.')
+
+
