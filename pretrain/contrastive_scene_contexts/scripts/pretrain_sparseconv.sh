@@ -20,7 +20,7 @@ python ddp_train.py -m \
     data.scannet_match_dir=$DATASET \
     data.world_space=True \
     trainer.trainer=PartitionPointNCELossTrainer \
-    trainer.batch_size=32 \
+    trainer.batch_size=16 \
     trainer.stat_freq=5 \
     trainer.checkpoint_freq=1000 \
     trainer.lr_update_freq=1000 \
@@ -30,7 +30,7 @@ python ddp_train.py -m \
     shape_context.nbins_zy=2 \
     shape_context.weight_inner=False \
     shape_context.fast_partition=True \
-    misc.num_gpus=8 \
+    misc.num_gpus=4 \
     misc.train_num_thread=2 \
     misc.npos=4096 \
     misc.nceT=0.4 \

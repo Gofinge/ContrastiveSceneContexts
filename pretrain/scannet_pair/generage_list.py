@@ -17,6 +17,7 @@ parser.add_argument('--target_dir', required=True, help='path to the target dir'
 opt = parser.parse_args()
 print(opt)
 
+
 def main():
     overlaps = glob.glob(os.path.join(opt.target_dir, "*/pcd/overlap.txt"))
     with open(os.path.join(opt.target_dir, 'overlap30.txt'), 'w') as f:
@@ -26,6 +27,7 @@ def main():
                 if float(op) >= 0.3:
                     print('{} {} {}'.format(pcd0, pcd1, op), file=f)
     print('done')
+
 
 if __name__ == '__main__':
     main()

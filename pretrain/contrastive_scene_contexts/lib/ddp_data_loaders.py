@@ -185,20 +185,20 @@ class PairDataset(torch.utils.data.Dataset):
     if manual_seed:
       self.reset_seed()
     
-    self.root = '/'
+    # self.root = '/'
     if phase == "train":
       self.root_filelist = root = config.data.scannet_match_dir
     else:
       raise NotImplementedError
 
     logging.info(f"Loading the subset {phase} from {root}")
-    fname_txt = os.path.join(self.root_filelist, 'splits/overlap30.txt')
+    fname_txt = os.path.join(self.root_filelist, 'overlap30.txt')
     with open(fname_txt) as f:
       content = f.readlines()
     fnames = [x.strip().split() for x in content]
     for fname in fnames:
-      self.files.append([os.path.join(self.root_filelist, fname[0]), 
-                         os.path.join(self.root_filelist, fname[1])])
+      self.files.append([self.root_filelist + fname[0],
+                         self.root_filelist + fname[1]])
 
   def reset_seed(self, seed=0):
     logging.info(f"Resetting the data loader seed to {seed}")
@@ -244,19 +244,19 @@ class ScanNetIndoorPairDataset(PairDataset):
     self.label_map[255] = 255
 
   def get_correspondences(self, idx):
-    file0 = os.path.join(self.root, self.files[idx][0])
-    file1 = os.path.join(self.root, self.files[idx][1])
-    data0 = np.load(file0)
-    data1 = np.load(file1)
-    xyz0 = data0["pcd"][:,:3]
-    xyz1 = data1["pcd"][:,:3]
+    file0 = self.files[idx][0]
+    file1 = self.files[idx][1]
+    data0 = torch.load(file0)
+    data1 = torch.load(file1)
+    xyz0 = data0["coord"]
+    xyz1 = data1["coord"]
 
-    label0 = (data0["pcd"][:,6] / 1000).astype(np.int32)
-    label1 = (data1["pcd"][:,6] / 1000).astype(np.int32)
-    instance0 = (data0["pcd"][:,6] % 1000).astype(np.int32)
-    instance1 = (data1["pcd"][:,6] % 1000).astype(np.int32)
-    color0 = data0['pcd'][:,3:6] 
-    color1 = data1['pcd'][:,3:6] 
+    # label0 = (data0["pcd"][:,6] / 1000).astype(np.int32)
+    # label1 = (data1["pcd"][:,6] / 1000).astype(np.int32)
+    # instance0 = (data0["pcd"][:,6] % 1000).astype(np.int32)
+    # instance1 = (data1["pcd"][:,6] % 1000).astype(np.int32)
+    color0 = data0['color'].astype(xyz0.dtype)
+    color1 = data1['color'].astype(xyz1.dtype)
 
     matching_search_voxel_size = self.matching_search_voxel_size
 
@@ -301,12 +301,12 @@ class ScanNetIndoorPairDataset(PairDataset):
     pcd1.colors = o3d.utility.Vector3dVector(color1[sel1])
     pcd0.points = o3d.utility.Vector3dVector(np.array(pcd0.points)[sel0])
     pcd1.points = o3d.utility.Vector3dVector(np.array(pcd1.points)[sel1])
-    label0 = label0[sel0]
-    label1 = label1[sel1]
+    # label0 = label0[sel0]
+    # label1 = label1[sel1]
     color0 = color0[sel0]
     color1 = color1[sel1]
-    instance0 = instance0[sel0]
-    instance1 = instance1[sel1]
+    # instance0 = instance0[sel0]
+    # instance1 = instance1[sel1]
     matches = get_matching_indices(pcd0, pcd1, trans, matching_search_voxel_size)
 
     # Get features
@@ -338,13 +338,17 @@ class ScanNetIndoorPairDataset(PairDataset):
     feats1 = feats1 / 255.0 - 0.5
 
     # label mapping for monitor
-    label0 = np.array([self.label_map[x] for x in label0], dtype=np.int)
-    label1 = np.array([self.label_map[x] for x in label1], dtype=np.int)
+    # label0 = np.array([self.label_map[x] for x in label0], dtype=np.int)
+    # label1 = np.array([self.label_map[x] for x in label1], dtype=np.int)
 
     # NB(s9xie): xyz are coordinates in the original system;
     # coords are sparse conv grid coords. (subject to a scaling factor)
     # coords0 -> sinput0_C
     # trans is T0*T1^-1
+    label0 = np.array([0])
+    label1 = np.array([0])
+    instance0 = np.array([0])
+    instance1 = np.array([0])
     return (xyz0, xyz1, coords0, coords1, feats0, feats1, label0, label1, instance0, instance1, matches, trans, T0)
 
   def __getitem__(self, idx):
