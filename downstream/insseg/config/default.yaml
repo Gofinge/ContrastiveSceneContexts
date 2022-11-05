@@ -81,7 +81,7 @@ train:
   is_train: True
   stat_freq: 40
   val_freq: 1000
-  empty_cache_freq: 1
+  empty_cache_freq: 1000
   train_phase: train
   val_phase: val
   overwrite_weights: True

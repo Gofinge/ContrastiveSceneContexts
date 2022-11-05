@@ -304,7 +304,7 @@ class VoxelizationDataset(VoxelizationDatasetBase):
     return {"ids": instance_ids, "center": centers, "occupancy": occupancy, "bbox": bbox}
 
   def __getitem__(self, index):
-    coords, feats, labels, instances = self.load_data(index)
+    coords, feats, labels, instances, normals = self.load_data(index)
     # Downsample the pointcloud with finer voxel size before transformation for memory and speed
     if self.PREVOXELIZATION_VOXEL_SIZE is not None:
       inds = ME.utils.sparse_quantize(
@@ -313,19 +313,20 @@ class VoxelizationDataset(VoxelizationDatasetBase):
       feats = feats[inds]
       labels = labels[inds]
       instances = instances[inds]
+      normals = normals[inds]
 
     # Prevoxel transformations
     if self.prevoxel_transform is not None:
       coords, feats, labels = self.prevoxel_transform(coords, feats, labels)
 
-    coords, feats, labels, instances, transformation = self.voxelizer.voxelize(
-        coords, feats, labels, instances)
+    coords, feats, labels, instances, normals, transformation = self.voxelizer.voxelize(
+        coords, feats, labels, instances, normals)
     
     #import ipdb; ipdb.set_trace()
     #from lib.pc_utils import save_point_cloud
     #save_point_cloud(coords, 'test.ply')
 
-
+    feats = np.concatenate((feats, normals), axis=1)
     # map labels not used for evaluation to ignore_label
     if self.input_transform is not None:
       coords, feats, labels, instances = self.input_transform(coords, feats, labels, instances)
@@ -337,7 +338,6 @@ class VoxelizationDataset(VoxelizationDatasetBase):
       coords += (torch.rand(3) * 100).int().numpy()
 
     #----------------Instances-------------------------
-    instance_info = instances
     condition = (labels == self.ignore_mask)
     instances[condition] = -1
     IGNORE_LABELS_INSTANCE = self.IGNORE_LABELS if self.config.misc.train_stuff else self.IGNORE_LABELS_INSTANCE
@@ -353,7 +353,6 @@ class VoxelizationDataset(VoxelizationDatasetBase):
     # Use coordinate features if config is set
     if self.AUGMENT_COORDS_TO_FEATS:
       coords, feats, labels = self._augment_coords_to_feats(coords, feats, labels)
-
     return_args = [coords, feats, labels, instance_info]
     if self.return_transformation:
       return_args.append(transformation.astype(np.float32))

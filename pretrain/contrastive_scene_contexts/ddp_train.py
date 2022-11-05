@@ -13,6 +13,7 @@ from omegaconf import OmegaConf
 from easydict import EasyDict as edict
 
 import lib.multiprocessing_utils as mpu
+import hydra
 
 from lib.ddp_trainer import PointNCELossTrainer, PartitionPointNCELossTrainer, PartitionPointNCELossTrainerPointNet
 
@@ -36,10 +37,12 @@ def get_trainer(trainer):
   else:
     raise ValueError(f'Trainer {trainer} not found')
 
-def main():
-  logging.info('===> Loading exsiting config file')
-  config = OmegaConf.load('config/defaults.yaml')
-  logging.info('===> Loaded exsiting config file')
+@hydra.main(config_path='config', config_name='defaults.yaml')
+def main(config):
+  if os.path.exists('config.yaml'):
+    logging.info('===> Loading exsiting config file')
+    config = OmegaConf.load('config.yaml')
+    logging.info('===> Loaded exsiting config file')
   logging.info('===> Configurations')
   logging.info(config)
 

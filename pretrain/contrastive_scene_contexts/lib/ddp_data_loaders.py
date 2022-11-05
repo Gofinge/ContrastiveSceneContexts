@@ -18,6 +18,7 @@ import MinkowskiEngine as ME
 
 from torch.utils.data.sampler import RandomSampler
 from lib.data_sampler import DistributedInfSampler
+from utils.visualization import save_point_cloud, save_lines
 import open3d as o3d
 
 
@@ -308,7 +309,13 @@ class ScanNetIndoorPairDataset(PairDataset):
     # instance0 = instance0[sel0]
     # instance1 = instance1[sel1]
     matches = get_matching_indices(pcd0, pcd1, trans, matching_search_voxel_size)
-
+    os.makedirs("vis", exist_ok=True)
+    # save_point_cloud(data0["coord"][sel0], color0/255, "vis/twin0.ply")
+    # save_point_cloud(data1["coord"][sel1], color1/255, "vis/twin1.ply")
+    # lines = np.array(matches)
+    # lines[:, 1] = lines[:, 1] + sel0.shape[0]
+    # save_lines(points=np.concatenate([data0["coord"][sel0], data1["coord"][sel1]]), lines=lines,
+    #            file_path=f"vis/lines_stage_0.ply")
     # Get features
     feats_train0, feats_train1 = [], []
 

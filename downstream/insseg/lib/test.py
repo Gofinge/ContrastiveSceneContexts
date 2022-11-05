@@ -161,12 +161,9 @@ def test(model, data_loader, config):
         color = input[:, :3].int()
       if config.augmentation.normalize_color:
         input[:, :3] = input[:, :3] / 255. - 0.5
-      sinput = SparseTensor(input, coords).to(device)
 
-      # Feed forward
-      inputs = (sinput,) if config.net.wrapper_type == None else (sinput, coords, color)
-      pt_offsets, soutput, out_feats = model(*inputs)
-      output = soutput.F
+      pt_offsets, soutput = model(coords.cuda(), input.cuda())
+      output = soutput
 
       pred = get_prediction(dataset, output, target).int()
       iter_time = iter_timer.toc(False)
@@ -191,7 +188,7 @@ def test(model, data_loader, config):
           evaluator.write_to_benchmark(scene_id=scene_id, pred_inst=instances)
       else:
           # --------------- voxel level------------------
-          vertices = coords.cpu().numpy()[:,1:] + pt_offsets.F.cpu().numpy() / dataset.VOXEL_SIZE
+          vertices = coords.cpu().numpy()[:,1:] + pt_offsets.cpu().numpy() / dataset.VOXEL_SIZE
           clusterred_result = cluster.get_instances(vertices, output.clone().cpu())
           instance_ids = instances[0]['ids'] 
           gt_labels = target.clone()

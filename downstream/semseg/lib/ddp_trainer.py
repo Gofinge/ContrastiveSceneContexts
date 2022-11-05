@@ -35,12 +35,12 @@ class SegmentationTrainer:
 
         # load the configurations
         self.setup_logging()
-        if os.path.exists('config.yaml'):
-            logging.info('===> Loading exsiting config file')
-            config = OmegaConf.load('config.yaml')
-            logging.info('===> Loaded exsiting config file')
-        logging.info('===> Configurations')
-        logging.info(config.pretty())
+        # if os.path.exists('config.yaml'):
+        #     logging.info('===> Loading exsiting config file')
+        #     config = OmegaConf.load('config.yaml')
+        #     logging.info('===> Loaded exsiting config file')
+        # logging.info('===> Configurations')
+        # logging.info(config)
 
         # dataloader
         DatasetClass = load_dataset(config.data.dataset)

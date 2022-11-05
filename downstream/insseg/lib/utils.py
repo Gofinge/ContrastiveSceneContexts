@@ -18,13 +18,13 @@ from lib.distributed import get_world_size
 def load_state_with_same_shape(model, weights):
   # weights['conv1.kernel'] = weights['conv1.kernel'].repeat([1,3,1])/3.0
   model_state = model.state_dict()
-  if list(weights.keys())[0].startswith('module.'):
+  if list(weights.keys())[1].startswith('module.'):
     logging.info("Loading multigpu weights with module. prefix...")
     weights = {k.partition('module.')[2]:weights[k] for k in weights.keys()}
   
-  if list(weights.keys())[0].startswith('encoder.'):
+  if list(weights.keys())[1].startswith('backbone.'):
     logging.info("Loading multigpu weights with encoder. prefix...")
-    weights = {k.partition('encoder.')[2]:weights[k] for k in weights.keys()}
+    weights = {k.partition('backbone.')[2]:weights[k] for k in weights.keys()}
   
   # print(weights.items())
   # print("===================")
@@ -37,7 +37,7 @@ def load_state_with_same_shape(model, weights):
   filtered_weights = {
       k: v for k, v in weights.items() if k in model_state  and v.size() == model_state[k].size() 
   }
-  logging.info("Loading weights:" + ', '.join(filtered_weights.keys()))
+  # logging.info("Loading weights:" + ', '.join(filtered_weights.keys()))
   return filtered_weights
 
 def checkpoint(model, optimizer, epoch, iteration, config, best_val_miou=None, best_val_mAP=None, postfix=None):

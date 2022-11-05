@@ -18,7 +18,7 @@ python ddp_main.py \
     augmentation.normalize_color=True \
     data.dataset=ScannetVoxelization2cmDataset \
     data.batch_size=48 \
-    data.num_workers=2 \
+    data.num_workers=8 \
     data.scannet_path=${DATAPATH} \
     data.return_transformation=True \
     optimizer.lr=0.1 \

@@ -102,7 +102,7 @@ class ScannetVoxelizationDataset(VoxelizationDataset):
 
   def load_data(self, index):
     filepath = self.data_root / self.data_paths[index]
-    pointcloud = torch.load(filepath)
+    pointcloud = torch.load(str(filepath))
     coords = pointcloud[0].astype(np.float32)
     feats = pointcloud[1].astype(np.float32)
     labels = pointcloud[2].astype(np.int32)

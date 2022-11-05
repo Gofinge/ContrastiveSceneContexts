@@ -154,7 +154,6 @@ class RandomDropout(object):
 
 
 class RandomHorizontalFlip(object):
-
   def __init__(self, upright_axis, is_temporal):
     """
     upright_axis: axis index among x,y,z, i.e. 2 for z

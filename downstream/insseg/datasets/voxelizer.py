@@ -111,7 +111,7 @@ class Voxelizer:
         (coords[:, 2] < (lim[2][1] + center[2])))
     return clip_inds
 
-  def voxelize(self, coords, feats, labels, instances, center=None):
+  def voxelize(self, coords, feats, labels, instances, normals, center=None):
 
     assert coords.shape[1] == 3 and coords.shape[0] == feats.shape[0] and coords.shape[0]
     if self.clip_bound is not None:
@@ -134,6 +134,7 @@ class Voxelizer:
     rigid_transformation = M_v
     if self.use_augmentation:
       rigid_transformation = M_r @ rigid_transformation
+      normals = normals @ M_r.T[:3, :3]
 
     homo_coords = np.hstack((coords, np.ones((coords.shape[0], 1), dtype=coords.dtype)))
     coords_aug = np.floor(homo_coords @ rigid_transformation.T[:, :3])
@@ -146,14 +147,15 @@ class Voxelizer:
     coords_aug = np.floor(coords_aug - min_coords)
 
     # key = self.hash(coords_aug)  # floor happens by astype(np.uint64)
-    mapping, colabels = ME.utils.sparse_quantize(
+    _, _, _, mapping = ME.utils.sparse_quantize(
         coords_aug, feats, labels=labels, return_index=True, ignore_label=self.ignore_label)
     coords_aug = coords_aug[mapping]
     feats = feats[mapping]
-    labels = colabels
+    normals = normals[mapping]
+    labels = labels[mapping]
     instances = instances[mapping]
 
-    return coords_aug, feats, labels, instances, rigid_transformation.flatten()
+    return coords_aug, feats, labels, instances, normals, rigid_transformation.flatten()
 
   def voxelize_temporal(self,
                         coords_t,

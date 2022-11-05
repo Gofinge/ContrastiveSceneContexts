@@ -20,7 +20,7 @@ python ddp_train.py -m \
     data.scannet_match_dir=$DATASET \
     data.world_space=True \
     trainer.trainer=PartitionPointNCELossTrainer \
-    trainer.batch_size=16 \
+    trainer.batch_size=32 \
     trainer.stat_freq=5 \
     trainer.checkpoint_freq=1000 \
     trainer.lr_update_freq=1000 \

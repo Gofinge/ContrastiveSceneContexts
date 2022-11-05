@@ -14,6 +14,7 @@ import numpy as np
 from scipy import spatial
 
 from datasets.dataset import VoxelizationDataset, DatasetPhase, str2datasetphase_type
+from datasets.scannet_constants import *
 from lib.pc_utils import read_plyfile, save_point_cloud
 from lib.utils import read_txt, fast_hist, per_class_iu
 from lib.io3d import write_triangle_mesh, create_color_palette
@@ -21,7 +22,7 @@ from lib.io3d import write_triangle_mesh, create_color_palette
 class ScannetVoxelizationDataset(VoxelizationDataset):
   # added
   NUM_LABELS = 41  # Will be converted to 20 as defined in IGNORE_LABELS.
-  NUM_IN_CHANNEL = 3
+  NUM_IN_CHANNEL = 6
   CLASS_LABELS = ('wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table', 'door', 'window',
               'bookshelf', 'picture', 'counter', 'desk', 'curtain', 'refrigerator',
               'shower curtain', 'toilet', 'sink', 'bathtub', 'otherfurniture')
@@ -109,11 +110,12 @@ class ScannetVoxelizationDataset(VoxelizationDataset):
 
   def load_data(self, index):
     filepath = self.data_root / self.data_paths[index]
-    pointcloud = torch.load(filepath)
+    pointcloud = torch.load(str(filepath))
     coords = pointcloud[0].astype(np.float32)
     feats = pointcloud[1].astype(np.float32)
     labels = pointcloud[2].astype(np.int32)
-    instances = pointcloud[3].astype(np.int32) 
+    instances = pointcloud[3].astype(np.int32)
+    normals = pointcloud[4].astype(np.int32)
     if self.sampled_inds:
       scene_name = self.get_output_id(index)
       mask = np.ones_like(labels).astype(np.bool)
@@ -122,7 +124,7 @@ class ScannetVoxelizationDataset(VoxelizationDataset):
       labels[mask] = 0
       instances[mask] = 0
 
-    return coords, feats, labels, instances
+    return coords, feats, labels, instances, normals
   
   def get_original_pointcloud(self, coords, transformation, iteration):
       logging.info('===> Start testing on original pointcloud space.')
@@ -171,3 +173,21 @@ class ScannetVoxelizationDataset(VoxelizationDataset):
 
 class ScannetVoxelization2cmDataset(ScannetVoxelizationDataset):
   VOXEL_SIZE = 0.02
+
+
+class Scannet200VoxelizationDataset(ScannetVoxelizationDataset):
+    # Load constants for label ids
+    SCANNET_COLOR_MAP = SCANNET_COLOR_MAP_200
+    CLASS_LABELS = CLASS_LABELS_200
+    VALID_CLASS_IDS = VALID_CLASS_IDS_200
+
+    NUM_LABELS = max(SCANNET_COLOR_MAP_LONG.keys()) + 1
+    IGNORE_LABELS = tuple(set(range(NUM_LABELS)) - set(VALID_CLASS_IDS))
+
+    CLASS_LABELS_INSTANCE = np.array([l for l in CLASS_LABELS if l not in PARENT_CLASS_SUPERCAT])
+    VALID_CLASS_IDS_INSTANCE = np.array([i for i in VALID_CLASS_IDS if i not in VALID_PARENT_IDS_SUPERCAT])
+    IGNORE_LABELS_INSTANCE = tuple(set(range(NUM_LABELS)) - set(VALID_CLASS_IDS_INSTANCE))
+
+
+class Scannet200Voxelization2cmDataset(Scannet200VoxelizationDataset):
+    VOXEL_SIZE = 0.02
